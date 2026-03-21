@@ -1,0 +1,77 @@
+name: rise_tomorrow
+description: "Rise Tomorrow - AI-powered productivity app for focus and task management."
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.6.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.8
+
+  # Firebase
+  firebase_core: ^3.13.1
+  firebase_auth: ^5.5.2
+  cloud_firestore: ^5.6.6
+  firebase_messaging: ^15.2.5
+  firebase_analytics: ^11.4.4
+  firebase_crashlytics: ^4.3.4
+
+  # State Management
+  flutter_riverpod: ^2.6.1
+
+  # Navigation
+  go_router: ^14.8.1
+
+  # UI Components
+  fl_chart: ^0.69.0
+  shimmer: ^3.0.0
+  flutter_slidable: ^3.1.1
+  flutter_staggered_animations: ^1.1.1
+  google_fonts: ^6.2.1
+  cached_network_image: ^3.4.1
+
+  # Time & Scheduling
+  intl: ^0.20.2
+  flutter_local_notifications: ^18.0.1
+  timezone: ^0.10.1
+  workmanager: ^0.9.0
+
+  # Permissions & Platform
+  permission_handler: ^11.4.0
+  device_info_plus: ^11.3.3
+
+  # Data & Export
+  csv: ^6.0.0
+  pdf: ^3.11.1
+  printing: ^5.14.2
+  share_plus: ^10.1.4
+  path_provider: ^2.1.5
+  hive: ^2.2.3
+  hive_flutter: ^1.1.0
+
+  # Security
+  local_auth: ^2.3.0
+  flutter_secure_storage: ^9.2.4
+
+  # Audio
+  audioplayers: ^6.4.0
+
+  # Utils
+  uuid: ^4.5.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/audio/
+    - assets/images/
