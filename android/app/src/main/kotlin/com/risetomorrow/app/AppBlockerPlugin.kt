@@ -57,6 +57,12 @@ class AppBlockerPlugin : FlutterPlugin, MethodCallHandler {
                 stopBlockingService()
                 result.success(null)
             }
+            "updateSchedules" -> {
+                val schedulesJson = call.argument<String>("schedulesJson") ?: "[]"
+                val packages = call.argument<List<String>>("packages") ?: emptyList()
+                AppBlockerScheduleManager.updateSchedules(context, schedulesJson, packages)
+                result.success(null)
+            }
             "isBlockingActive" -> result.success(isServiceRunning())
             "getInstalledApps" -> {
                 Thread {

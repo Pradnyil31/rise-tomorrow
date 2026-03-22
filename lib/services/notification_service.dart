@@ -1,4 +1,5 @@
 import 'package:flutter_local_notifications/flutter_local_notifications.dart' as fln;
+import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest_all.dart' as tzData;
 import '../models/task.dart';
@@ -14,6 +15,9 @@ class NotificationService {
 
   Future<void> init() async {
     tzData.initializeTimeZones();
+    final dynamic val = await FlutterTimezone.getLocalTimezone();
+    final String timeZoneName = (val is String) ? val : val.identifier;
+    tz.setLocalLocation(tz.getLocation(timeZoneName));
 
     const android = fln.AndroidInitializationSettings('@mipmap/ic_launcher');
     const ios = fln.DarwinInitializationSettings(
@@ -35,16 +39,28 @@ class NotificationService {
   }
 
   // ─── Task Reminder ──────────────────────────────────────────────────────────
+  
+  static const _motivatingTitles = [
+    'Time to crush it! 💪',
+    'Your next win is waiting! 🚀',
+    'Stay focused, you got this! 🎯',
+    "Let's make it happen! ✨",
+    'One step closer to your goals! 🏆',
+    'Time to shine! 💫',
+    'You are doing great, keep going! 🌟'
+  ];
 
   Future<void> scheduleTaskReminder(Task task) async {
     if (task.dueDate == null) return;
     final notifyAt = task.dueDate!.subtract(const Duration(minutes: 15));
     if (notifyAt.isBefore(DateTime.now())) return;
 
+    final title = _motivatingTitles[task.id.hashCode.abs() % _motivatingTitles.length];
+
     await _plugin.zonedSchedule(
       task.id.hashCode,
-      'Task Due Soon ⏰',
-      task.title,
+      title,
+      'Time for: ${task.title}',
       tz.TZDateTime.from(notifyAt, tz.local),
       _taskDetails(),
       androidScheduleMode: fln.AndroidScheduleMode.exactAllowWhileIdle,

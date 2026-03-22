@@ -1,4 +1,5 @@
 import 'package:flutter/services.dart';
+import 'dart:convert';
 
 class AppBlockingService {
   static const _channel = MethodChannel('com.risetomorrow/app_blocker');
@@ -56,6 +57,15 @@ class AppBlockingService {
   }
 
   // ─── Blocking ────────────────────────────────────────────────────────────────
+
+  Future<void> updateSchedules(List<Map<String, dynamic>> schedulesJson, List<String> packageNames) async {
+    try {
+      await _channel.invokeMethod('updateSchedules', {
+        'schedulesJson': jsonEncode(schedulesJson),
+        'packages': packageNames,
+      });
+    } catch (_) {}
+  }
 
   Future<void> startBlocking({
     required List<String> packageNames,

@@ -38,6 +38,7 @@ class TasksScreen extends ConsumerWidget {
                   TaskFilter.today: 'Today',
                   TaskFilter.highPriority: 'High Priority',
                   TaskFilter.overdue: 'Overdue',
+                  TaskFilter.completed: 'Completed',
                 };
                 return Padding(
                   padding: const EdgeInsets.only(right: 8),
@@ -100,6 +101,7 @@ class _EmptyTasks extends StatelessWidget {
       TaskFilter.today: "No tasks due today. Enjoy your day! 🌤️",
       TaskFilter.highPriority: "No high priority tasks. Great job! ✅",
       TaskFilter.overdue: "No overdue tasks. You're on top of things! 🎉",
+      TaskFilter.completed: "No completed tasks yet. Keep going! 💪",
     };
     return Center(
       child: Column(

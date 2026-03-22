@@ -1,13 +1,14 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 import '../services/firebase_service.dart';
+import '../services/notification_service.dart';
 import '../models/task.dart';
 import '../providers/auth_provider.dart';
 
 final firebaseServiceProvider =
     Provider<FirebaseService>((ref) => FirebaseService());
 
-enum TaskFilter { all, today, highPriority, overdue }
+enum TaskFilter { all, today, highPriority, overdue, completed }
 
 final taskFilterProvider = StateProvider<TaskFilter>((ref) => TaskFilter.all);
 
@@ -53,6 +54,8 @@ class TasksNotifier extends StateNotifier<AsyncValue<List<Task>>> {
         return tasks.where((t) => t.priority == Priority.high).toList();
       case TaskFilter.overdue:
         return tasks.where((t) => t.isOverdue).toList();
+      case TaskFilter.completed:
+        return tasks.where((t) => t.isCompleted).toList();
     }
   }
 
@@ -80,6 +83,9 @@ class TasksNotifier extends StateNotifier<AsyncValue<List<Task>>> {
     );
 
     await _ref.read(firebaseServiceProvider).addTask(task);
+    if (task.dueDate != null) {
+      NotificationService().scheduleTaskReminder(task);
+    }
   }
 
   Future<void> completeTask(String id) async {
@@ -90,13 +96,20 @@ class TasksNotifier extends StateNotifier<AsyncValue<List<Task>>> {
       completedAt: DateTime.now(),
     );
     await _ref.read(firebaseServiceProvider).updateTask(updated);
+    NotificationService().cancelTaskReminder(id);
   }
 
   Future<void> deleteTask(String id) async {
     await _ref.read(firebaseServiceProvider).deleteTask(id);
+    NotificationService().cancelTaskReminder(id);
   }
 
   Future<void> updateTask(Task task) async {
     await _ref.read(firebaseServiceProvider).updateTask(task);
+    if (task.dueDate != null && !task.isCompleted) {
+      NotificationService().scheduleTaskReminder(task);
+    } else {
+      NotificationService().cancelTaskReminder(task.id);
+    }
   }
 }

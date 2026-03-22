@@ -1,5 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../services/app_blocking_service.dart';
+import '../providers/settings_provider.dart';
+import '../providers/sessions_provider.dart';
+import '../models/focus_session.dart';
 
 // ─── Service Provider ────────────────────────────────────────────────────────
 
@@ -78,23 +82,42 @@ class BlockingState {
 
 final blockingProvider =
     StateNotifierProvider<BlockingNotifier, BlockingState>((ref) {
-  return BlockingNotifier(ref.read(appBlockingServiceProvider));
+  return BlockingNotifier(ref.read(appBlockingServiceProvider), ref);
 });
 
 class BlockingNotifier extends StateNotifier<BlockingState> {
   final AppBlockingService _svc;
+  final Ref _ref;
 
-  BlockingNotifier(this._svc) : super(const BlockingState()) {
+  BlockingNotifier(this._svc, this._ref) : super(const BlockingState()) {
     _init();
+    
+    // Sync schedules when settings change
+    _ref.listen(settingsProvider, (_, next) {
+      _syncSchedulesToNative(next.schedules);
+    });
   }
 
   Future<void> _init() async {
     final apps = await _svc.getInstalledApps();
     final active = await _svc.isBlockingActive();
-    state = state.copyWith(installedApps: apps, isActive: active, isLoading: false);
+    
+    final prefs = await SharedPreferences.getInstance();
+    final savedPkgs = prefs.getStringList('selected_blocked_pkgs') ?? [];
+    
+    state = state.copyWith(
+        installedApps: apps, 
+        isActive: active, 
+        isLoading: false,
+        selectedPackages: savedPkgs.toSet()
+    );
+    
+    _syncSchedulesToNative(_ref.read(settingsProvider).schedules);
   }
 
   void togglePackage(String pkg) {
+    if (state.isActive) return; // Feature 6: prevent deselection
+    
     final set = Set<String>.from(state.selectedPackages);
     if (set.contains(pkg)) {
       set.remove(pkg);
@@ -102,16 +125,51 @@ class BlockingNotifier extends StateNotifier<BlockingState> {
       set.add(pkg);
     }
     state = state.copyWith(selectedPackages: set);
+    
+    // Save to SharedPreferences
+    SharedPreferences.getInstance().then((prefs) {
+      prefs.setStringList('selected_blocked_pkgs', set.toList());
+    });
+    
+    _syncSchedulesToNative(_ref.read(settingsProvider).schedules);
   }
+
+  void _syncSchedulesToNative(List<dynamic> schedules) {
+    final schedsList = schedules.map((e) => e.toJson() as Map<String, dynamic>).toList();
+    _svc.updateSchedules(schedsList, state.selectedPackages.toList());
+  }
+
+  DateTime? _blockStartTime;
 
   Future<void> startBlocking() async {
     if (state.selectedPackages.isEmpty) return;
     await _svc.startBlocking(packageNames: state.selectedPackages.toList());
+    _blockStartTime = DateTime.now();
     state = state.copyWith(isActive: true);
   }
 
   Future<void> stopBlocking() async {
     await _svc.stopBlocking();
+    if (_blockStartTime != null) {
+      final now = DateTime.now();
+      final duration = now.difference(_blockStartTime!).inMinutes;
+      if (duration > 0) {
+        final session = FocusSession(
+          id: '',
+          userId: '',
+          type: SessionType.custom,
+          sessionName: 'App Blocker Focus',
+          startTime: _blockStartTime!,
+          endTime: now,
+          duration: duration,
+          actualDuration: duration,
+          completed: true,
+          createdAt: now,
+        );
+        _ref.read(saveSessionProvider)(session);
+      }
+      _blockStartTime = null;
+    }
     state = state.copyWith(isActive: false);
   }
 
