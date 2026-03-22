@@ -15,6 +15,7 @@ import '../screens/tasks/add_task_screen.dart';
 import '../screens/app_blocker/app_blocker_screen.dart';
 import '../screens/analytics/analytics_screen.dart';
 import '../screens/settings/settings_screen.dart';
+import '../screens/profile/profile_screen.dart';
 import '../widgets/common/main_scaffold.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
@@ -64,6 +65,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/register',
         builder: (ctx, _) => const RegisterScreen(),
+      ),
+      GoRoute(
+        path: '/profile',
+        builder: (ctx, _) => const ProfileScreen(),
       ),
 
       // Main shell with bottom nav

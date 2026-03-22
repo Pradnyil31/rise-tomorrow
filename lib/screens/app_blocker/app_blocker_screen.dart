@@ -508,84 +508,91 @@ class _ScheduledTab extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: Colors.transparent,
-      body: schedules.isEmpty
-          ? const Center(
-              child: Text('No schedules yet.\nTap below to add one.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: Color(0xFF6B7280))),
-            )
-          : ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: schedules.length,
-              itemBuilder: (ctx, i) {
-                final s = schedules[i];
-                return Card(
-                  margin: const EdgeInsets.only(bottom: 12),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                  child: Padding(
+      body: Column(
+        children: [
+          const _SelectedAppsAction(),
+          Expanded(
+            child: schedules.isEmpty
+                ? const Center(
+                    child: Text('No schedules yet.\nTap below to add one.',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(color: Color(0xFF6B7280))),
+                  )
+                : ListView.builder(
                     padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text('${s.startTime} - ${s.endTime}',
-                                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
-                            Switch(
-                              value: s.isEnabled,
-                              onChanged: (_) => notifier.toggleSchedule(s.id),
-                              activeColor: AppColors.primary,
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 12),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Wrap(
-                                spacing: 4,
-                                children: ['M', 'T', 'W', 'T', 'F', 'S', 'S'].asMap().entries.map((e) {
-                                  final dayNum = e.key + 1;
-                                  final isSelected = s.days.contains(dayNum);
-                                  return Container(
-                                    width: 24,
-                                    height: 24,
-                                    alignment: Alignment.center,
-                                    decoration: BoxDecoration(
-                                      color: isSelected ? AppColors.primary : Theme.of(context).cardColor,
-                                      shape: BoxShape.circle,
-                                      border: Border.all(
-                                          color: isSelected ? AppColors.primary : Theme.of(context).dividerColor.withOpacity(0.2)),
-                                    ),
-                                    child: Text(
-                                      e.value,
-                                      style: TextStyle(
-                                        fontSize: 10,
-                                        color: isSelected ? Colors.white : const Color(0xFF6B7280),
-                                        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                                      ),
-                                    ),
-                                  );
-                                }).toList(),
+                    itemCount: schedules.length,
+                    itemBuilder: (ctx, i) {
+                      final s = schedules[i];
+                      return Card(
+                        margin: const EdgeInsets.only(bottom: 12),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text('${s.startTime} - ${s.endTime}',
+                                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+                                  Switch(
+                                    value: s.isEnabled,
+                                    onChanged: (_) => notifier.toggleSchedule(s.id),
+                                    activeColor: AppColors.primary,
+                                  ),
+                                ],
                               ),
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.edit_rounded, color: AppColors.primary, size: 20),
-                              onPressed: () => _showEditDialog(context, ref, s),
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.delete_rounded, color: AppColors.error, size: 20),
-                              onPressed: () => notifier.removeSchedule(s.id),
-                            ),
-                          ],
+                              const SizedBox(height: 12),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: Wrap(
+                                      spacing: 4,
+                                      children: ['M', 'T', 'W', 'T', 'F', 'S', 'S'].asMap().entries.map((e) {
+                                        final dayNum = e.key + 1;
+                                        final isSelected = s.days.contains(dayNum);
+                                        return Container(
+                                          width: 24,
+                                          height: 24,
+                                          alignment: Alignment.center,
+                                          decoration: BoxDecoration(
+                                            color: isSelected ? AppColors.primary : Theme.of(context).cardColor,
+                                            shape: BoxShape.circle,
+                                            border: Border.all(
+                                                color: isSelected ? AppColors.primary : Theme.of(context).dividerColor.withOpacity(0.2)),
+                                          ),
+                                          child: Text(
+                                            e.value,
+                                            style: TextStyle(
+                                              fontSize: 10,
+                                              color: isSelected ? Colors.white : const Color(0xFF6B7280),
+                                              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                            ),
+                                          ),
+                                        );
+                                      }).toList(),
+                                    ),
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(Icons.edit_rounded, color: AppColors.primary, size: 20),
+                                    onPressed: () => _showEditDialog(context, ref, s),
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(Icons.delete_rounded, color: AppColors.error, size: 20),
+                                    onPressed: () => notifier.removeSchedule(s.id),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
                         ),
-                      ],
-                    ),
+                      );
+                    },
                   ),
-                );
-              },
-            ),
+          ),
+        ],
+      ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _showEditDialog(context, ref),
         label: const Text('Add Schedule'),
@@ -732,6 +739,8 @@ class _QuickBlockTab extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
+          const _SelectedAppsAction(),
+          const Spacer(),
           const Icon(Icons.bolt_rounded, size: 64, color: AppColors.primary),
           const SizedBox(height: 16),
           const Text('Quick Block',
@@ -764,6 +773,143 @@ class _QuickBlockTab extends StatelessWidget {
                 ),
               ),
             ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Shared UI for Selected Apps ───────────────────────────────────────────────
+
+class _SelectedAppsAction extends ConsumerWidget {
+  const _SelectedAppsAction();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final blocking = ref.watch(blockingProvider);
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.primary.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.primary.withOpacity(0.2)),
+      ),
+      child: Row(
+        children: [
+          CircleAvatar(
+            backgroundColor: AppColors.primary.withOpacity(0.15),
+            child: const Icon(Icons.apps_rounded, color: AppColors.primary),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('Target Apps', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
+                Text('${blocking.selectedPackages.length} apps selected for blocking',
+                    style: const TextStyle(color: Color(0xFF6B7280), fontSize: 13)),
+              ],
+            ),
+          ),
+          TextButton(
+            onPressed: () {
+              showModalBottomSheet(
+                context: context,
+                isScrollControlled: true,
+                backgroundColor: Colors.transparent,
+                builder: (ctx) => const _AppSelectorBottomSheet(),
+              );
+            },
+            child: const Text('Edit'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _AppSelectorBottomSheet extends ConsumerStatefulWidget {
+  const _AppSelectorBottomSheet();
+  @override
+  ConsumerState<_AppSelectorBottomSheet> createState() => _AppSelectorBottomSheetState();
+}
+
+class _AppSelectorBottomSheetState extends ConsumerState<_AppSelectorBottomSheet> {
+  String _searchQuery = '';
+  @override
+  Widget build(BuildContext context) {
+    final blocking = ref.watch(blockingProvider);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
+    final filtered = blocking.installedApps.where((a) {
+      if (_searchQuery.isEmpty) return true;
+      return a['name']!.toLowerCase().contains(_searchQuery.toLowerCase());
+    }).toList();
+
+    return Container(
+      height: MediaQuery.of(context).size.height * 0.85,
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.surfaceDark : AppColors.surface,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      child: Column(
+        children: [
+          const SizedBox(height: 12),
+          Container(width: 40, height: 5, decoration: BoxDecoration(color: Colors.grey.withOpacity(0.3), borderRadius: BorderRadius.circular(10))),
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text('Select Apps to Block', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.pop(context)),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: TextField(
+              decoration: InputDecoration(
+                hintText: 'Search...',
+                prefixIcon: const Icon(Icons.search_rounded),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              ),
+              onChanged: (v) => setState(() => _searchQuery = v),
+            ),
+          ),
+          Expanded(
+            child: ListView.builder(
+              padding: const EdgeInsets.all(16),
+              itemCount: filtered.length,
+              itemBuilder: (ctx, i) {
+                 final app = filtered[i];
+                 final pkg = app['package']!;
+                 final isSelected = blocking.selectedPackages.contains(pkg);
+                 return ListTile(
+                   leading: app['icon'] != null 
+                     ? ClipOval(child: Image.memory(app['icon'] as Uint8List, width: 32, height: 32, fit: BoxFit.cover)) 
+                     : FutureBuilder<Uint8List?>(
+                         future: AppBlockingService().getAppIcon(pkg),
+                         builder: (context, snapshot) {
+                           if (snapshot.hasData && snapshot.data != null) {
+                             return ClipOval(child: Image.memory(snapshot.data!, width: 32, height: 32, fit: BoxFit.cover));
+                           }
+                           return const Icon(Icons.android, size: 32);
+                         },
+                       ),
+                   title: Text(app['name']!),
+                   trailing: Checkbox(
+                     value: isSelected,
+                     activeColor: AppColors.primary,
+                     onChanged: (_) => ref.read(blockingProvider.notifier).togglePackage(pkg),
+                   ),
+                   onTap: () => ref.read(blockingProvider.notifier).togglePackage(pkg),
+                 );
+              },
+            ),
+          ),
         ],
       ),
     );

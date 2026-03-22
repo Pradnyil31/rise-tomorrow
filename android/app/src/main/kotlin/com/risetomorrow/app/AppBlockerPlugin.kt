@@ -58,7 +58,20 @@ class AppBlockerPlugin : FlutterPlugin, MethodCallHandler {
                 result.success(null)
             }
             "isBlockingActive" -> result.success(isServiceRunning())
-            "getInstalledApps" -> result.success(getInstalledApps())
+            "getInstalledApps" -> {
+                Thread {
+                    try {
+                        val apps = getInstalledApps()
+                        android.os.Handler(android.os.Looper.getMainLooper()).post {
+                            result.success(apps)
+                        }
+                    } catch (e: Exception) {
+                        android.os.Handler(android.os.Looper.getMainLooper()).post {
+                            result.error("APPS_ERROR", e.message, null)
+                        }
+                    }
+                }.start()
+            }
             "getAppIcon" -> {
                 val packageName = call.argument<String>("package") ?: ""
                 Thread {

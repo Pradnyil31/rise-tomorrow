@@ -151,18 +151,18 @@ class AnalyticsScreen extends ConsumerWidget {
                     fit: StackFit.expand,
                     children: [
                       CircularProgressIndicator(
-                        value: 0.75,
+                        value: state.productivityScore / 100.0,
                         strokeWidth: 12,
                         backgroundColor: AppColors.outlineColor,
-                        color: AppColors.secondary,
+                        color: _getScoreColor(state.productivityScore),
                         strokeCap: StrokeCap.round,
                       ),
-                      const Center(
+                      Center(
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Text('75', style: TextStyle(fontSize: 36, fontWeight: FontWeight.w800)),
-                            Text('Good', style: TextStyle(color: AppColors.secondary, fontWeight: FontWeight.w600)),
+                            Text(state.productivityScore.toInt().toString(), style: const TextStyle(fontSize: 36, fontWeight: FontWeight.w800)),
+                            Text(_getScoreLabel(state.productivityScore), style: TextStyle(color: _getScoreColor(state.productivityScore), fontWeight: FontWeight.w600)),
                           ],
                         ),
                       ),
@@ -171,7 +171,7 @@ class AnalyticsScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: 16),
                 const Text(
-                  'Your focus consistency is slightly above average this week.',
+                  'This score is based on your focus duration and completed tasks today.',
                   textAlign: TextAlign.center,
                   style: TextStyle(color: Color(0xFF6B7280), fontSize: 13),
                 ),
@@ -181,6 +181,20 @@ class AnalyticsScreen extends ConsumerWidget {
         ],
       ),
     );
+  }
+
+  Color _getScoreColor(double score) {
+    if (score >= 80) return AppColors.success;
+    if (score >= 50) return AppColors.secondary;
+    if (score >= 20) return AppColors.warning;
+    return AppColors.error;
+  }
+
+  String _getScoreLabel(double score) {
+    if (score >= 80) return 'Excellent';
+    if (score >= 50) return 'Good';
+    if (score >= 20) return 'Fair';
+    return 'Needs Focus';
   }
 }
 

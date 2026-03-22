@@ -68,17 +68,20 @@ class HomeScreen extends ConsumerWidget {
                         ),
                       ],
                     ),
-                    CircleAvatar(
-                      radius: 22,
-                      backgroundColor: Colors.white.withOpacity(0.3),
-                      child: Text(
-                        displayName.isEmpty
-                            ? '?'
-                            : displayName[0].toUpperCase(),
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white,
+                    GestureDetector(
+                      onTap: () => context.push('/profile'),
+                      child: CircleAvatar(
+                        radius: 22,
+                        backgroundColor: Colors.white.withOpacity(0.3),
+                        child: Text(
+                          displayName.isEmpty
+                              ? '?'
+                              : displayName[0].toUpperCase(),
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                          ),
                         ),
                       ),
                     ),

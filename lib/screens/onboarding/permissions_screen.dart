@@ -1,47 +1,58 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:permission_handler/permission_handler.dart';
 import '../../config/theme.dart';
+import '../../providers/app_blocker_provider.dart';
 
-class PermissionsScreen extends StatefulWidget {
+class PermissionsScreen extends ConsumerStatefulWidget {
   const PermissionsScreen({super.key});
 
   @override
-  State<PermissionsScreen> createState() => _PermissionsScreenState();
+  ConsumerState<PermissionsScreen> createState() => _PermissionsScreenState();
 }
 
-class _PermissionsScreenState extends State<PermissionsScreen> {
-  Map<String, bool> _granted = {};
+class _PermissionsScreenState extends ConsumerState<PermissionsScreen> with WidgetsBindingObserver {
+  bool _notificationGranted = false;
+  bool _storageGranted = true; // Auto-granted on modern Android typically, but we track it.
 
-  final _perms = [
-    {
-      'key': 'notification',
-      'title': 'Notifications',
-      'description': 'Get reminded about tasks and focus session completions.',
-      'icon': Icons.notifications_outlined,
-    },
-    {
-      'key': 'storage',
-      'title': 'Storage Access',
-      'description': 'Save and share your exported reports.',
-      'icon': Icons.folder_outlined,
-    },
-  ];
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _checkPermissions();
+  }
 
-  Future<void> _request(String key) async {
-    bool result = false;
-    if (key == 'notification') {
-      final status = await Permission.notification.request();
-      result = status.isGranted;
-    } else if (key == 'storage') {
-      // Storage permission is auto-granted on modern Android
-      result = true;
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _checkPermissions();
+      ref.read(permissionsProvider.notifier).refresh();
     }
-    setState(() => _granted[key] = result);
+  }
+
+  Future<void> _checkPermissions() async {
+    final notif = await Permission.notification.isGranted;
+    setState(() {
+      _notificationGranted = notif;
+    });
+  }
+
+  Future<void> _requestNotification() async {
+    final status = await Permission.notification.request();
+    setState(() => _notificationGranted = status.isGranted);
   }
 
   @override
   Widget build(BuildContext context) {
+    final blockerPerms = ref.watch(permissionsProvider);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Permissions'),
@@ -61,18 +72,46 @@ class _PermissionsScreenState extends State<PermissionsScreen> {
             ),
             const SizedBox(height: 8),
             const Text(
-              'You can change these anytime in Settings.',
+              'We need these to ensure the app functions correctly. You can change these anytime in Settings.',
               style: TextStyle(color: Color(0xFF6B7280), fontSize: 14),
             ),
             const SizedBox(height: 28),
-            ...(_perms.map((p) => _PermissionTile(
-                  title: p['title'] as String,
-                  description: p['description'] as String,
-                  icon: p['icon'] as IconData,
-                  isGranted: _granted[p['key']] ?? false,
-                  onRequest: () => _request(p['key'] as String),
-                ))),
-            const Spacer(),
+            
+            Expanded(
+              child: ListView(
+                children: [
+                  _PermissionTile(
+                    title: 'Notifications',
+                    description: 'Get reminded about tasks and focus session completions.',
+                    icon: Icons.notifications_outlined,
+                    isGranted: _notificationGranted,
+                    onRequest: _requestNotification,
+                  ),
+                  _PermissionTile(
+                    title: 'Storage Access',
+                    description: 'Save and share your exported reports.',
+                    icon: Icons.folder_outlined,
+                    isGranted: _storageGranted, // Auto-granted mock
+                    onRequest: () {},
+                  ),
+                  _PermissionTile(
+                    title: 'Usage Access',
+                    description: 'Required to detect when distracting apps are opened.',
+                    icon: Icons.query_stats_rounded,
+                    isGranted: blockerPerms.hasUsageStats,
+                    onRequest: () => ref.read(permissionsProvider.notifier).requestUsageStats(),
+                  ),
+                  _PermissionTile(
+                    title: 'Overlay Permission',
+                    description: 'Allows the focus screen to appear over blocked apps.',
+                    icon: Icons.layers_rounded,
+                    isGranted: blockerPerms.hasOverlay,
+                    onRequest: () => ref.read(permissionsProvider.notifier).requestOverlay(),
+                  ),
+                ],
+              ),
+            ),
+            
             SizedBox(
               width: double.infinity,
               height: 52,
@@ -117,6 +156,13 @@ class _PermissionTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(
+          color: isGranted ? AppColors.success.withOpacity(0.5) : Colors.transparent,
+          width: 1,
+        ),
+      ),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Row(
@@ -125,10 +171,14 @@ class _PermissionTile extends StatelessWidget {
               width: 46,
               height: 46,
               decoration: BoxDecoration(
-                color: AppColors.primary.withOpacity(0.1),
+                color: (isGranted ? AppColors.success : AppColors.primary).withOpacity(0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(icon, color: AppColors.primary, size: 22),
+              child: Icon(
+                isGranted ? Icons.check_circle_rounded : icon, 
+                color: isGranted ? AppColors.success : AppColors.primary, 
+                size: 24
+              ),
             ),
             const SizedBox(width: 14),
             Expanded(
@@ -138,10 +188,10 @@ class _PermissionTile extends StatelessWidget {
                   Text(title,
                       style: const TextStyle(
                           fontWeight: FontWeight.w600, fontSize: 15)),
-                  const SizedBox(height: 2),
+                  const SizedBox(height: 4),
                   Text(description,
                       style: const TextStyle(
-                          fontSize: 13, color: Color(0xFF6B7280))),
+                          fontSize: 13, color: Color(0xFF6B7280), height: 1.3)),
                 ],
               ),
             ),
@@ -162,7 +212,12 @@ class _PermissionTile extends StatelessWidget {
                   )
                 : TextButton(
                     onPressed: onRequest,
-                    child: const Text('Allow'),
+                    style: TextButton.styleFrom(
+                      backgroundColor: AppColors.primary.withOpacity(0.1),
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                    ),
+                    child: const Text('Allow', style: TextStyle(fontWeight: FontWeight.w600)),
                   ),
           ],
         ),

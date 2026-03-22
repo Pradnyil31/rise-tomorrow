@@ -91,7 +91,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
 
                     // Tagline
                     Text(
-                      'Build A Better Version of yourself\nBlock distractions. Manage tasks.\nTrack your growth.',
+                      'Build a Better Version of You\nBlock distractions. Manage tasks.\nTrack your growth.',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 16,

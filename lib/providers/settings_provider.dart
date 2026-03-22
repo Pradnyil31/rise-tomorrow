@@ -75,12 +75,14 @@ class AnalyticsState {
   final int completedTasksTotal;
   final int currentStreak;
   final List<double> weeklyFocusMinutes; // last 7 days
+  final double productivityScore;
 
   const AnalyticsState({
     this.totalFocusMinutesToday = 0,
     this.completedTasksTotal = 0,
     this.currentStreak = 0,
     this.weeklyFocusMinutes = const [0, 0, 0, 0, 0, 0, 0],
+    this.productivityScore = 0.0,
   });
 }
 
@@ -138,11 +140,20 @@ class AnalyticsNotifier extends StateNotifier<AnalyticsState> {
       }
     }
 
+    // Productivity Score calculation
+    // Max 100. Base: (focusToday / 120) * 80 + (completed * 20)
+    double score = 0.0;
+    if (focusToday > 0 || completed > 0) {
+      score = ((focusToday / 120.0) * 80.0) + (completed * 10.0);
+      if (score > 100.0) score = 100.0;
+    }
+
     state = AnalyticsState(
       completedTasksTotal: completed,
       totalFocusMinutesToday: focusToday,
       currentStreak: streak,
       weeklyFocusMinutes: weekly,
+      productivityScore: score,
     );
   }
 
